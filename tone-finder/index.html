@@ -1,0 +1,1372 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist Tone Finder - H&K Black Spirit Edition</title>
+    
+    <!-- iOS PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tone Finder">
+    <meta name="theme-color" content="#0f1115">
+    
+    <style>
+:root {
+    --bg-dark: #0f1115;
+    --bg-panel: #1a1d24;
+    --bg-card: #232730;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --hk-blue: #00d2ff;
+    --hk-blue-glow: rgba(0, 210, 255, 0.6);
+    --hk-blue-dim: rgba(0, 210, 255, 0.15);
+    --error: #ef4444;
+    --success: #10b981;
+    --border-color: #334155;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1, h2, h3, .knob-val, .channel-display {
+    font-family: 'Orbitron', sans-serif;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logo i {
+    font-size: 2rem;
+    color: var(--hk-blue);
+    text-shadow: 0 0 10px var(--hk-blue-glow);
+}
+
+.logo h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+.badge {
+    background-color: var(--hk-blue-dim);
+    color: var(--hk-blue);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border: 1px solid var(--hk-blue-glow);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.icon-btn:hover {
+    color: var(--hk-blue);
+    transform: rotate(90deg);
+}
+
+main {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.search-section {
+    text-align: center;
+    margin-bottom: 3rem;
+    margin-top: 2rem;
+}
+
+.search-section h2 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    color: #fff;
+}
+
+.search-box {
+    display: flex;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 1.2rem 1.5rem;
+    font-size: 1.1rem;
+    border: none;
+    background-color: var(--bg-panel);
+    color: white;
+    outline: none;
+    border: 1px solid var(--border-color);
+    border-right: none;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+
+.search-box input:focus {
+    border-color: var(--hk-blue);
+    box-shadow: inset 0 0 10px var(--hk-blue-dim);
+}
+
+.search-box button {
+    padding: 0 2rem;
+    background-color: var(--hk-blue);
+    color: #000;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.search-box button:hover {
+    background-color: #fff;
+    box-shadow: 0 0 15px var(--hk-blue-glow);
+}
+
+#loading-msg {
+    margin-top: 1.5rem;
+    color: var(--hk-blue);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.error-msg {
+    margin-top: 1.5rem;
+    color: var(--error);
+}
+
+/* Results Section */
+#results-section {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background-color: var(--bg-panel);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.card h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    color: var(--hk-blue);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.8rem;
+}
+
+.info-row {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.info-row.tips-row {
+    margin-top: 1.5rem;
+}
+
+.label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.value {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.text-block {
+    background-color: var(--bg-card);
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    border-left: 3px solid var(--hk-blue);
+}
+
+/* Amp Dashboard */
+.amp-dashboard {
+    background-color: #111;
+    border-radius: 12px;
+    padding: 2rem;
+    border: 2px solid #333;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.8), inset 0 0 60px rgba(0, 0, 0, 0.9);
+    position: relative;
+    overflow: hidden;
+}
+
+.amp-dashboard::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 100%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0) 20%);
+    pointer-events: none;
+}
+
+.amp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #222;
+    padding-bottom: 1rem;
+}
+
+.amp-header h2 {
+    color: #555;
+    font-size: 1.5rem;
+    letter-spacing: 4px;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.channel-display {
+    background-color: #000;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    color: var(--hk-blue);
+    font-size: 1.2rem;
+    border: 1px solid var(--hk-blue-dim);
+    box-shadow: inset 0 0 10px var(--hk-blue-dim), 0 0 15px var(--hk-blue-glow);
+    text-shadow: 0 0 5px var(--hk-blue);
+}
+
+.channel-display span {
+    font-weight: bold;
+}
+
+.knobs-container {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.divider {
+    width: 2px;
+    background-color: #333;
+    border-radius: 2px;
+    margin: 0 1rem;
+}
+
+.knob-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    width: 80px;
+}
+
+.knob {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #444, #1a1a1a);
+    box-shadow: 
+        inset 0 0 5px rgba(0,0,0,1),
+        0 5px 10px rgba(0,0,0,0.8),
+        0 0 0 2px #0a0a0a;
+    position: relative;
+    transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.knob .pointer {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 15px;
+    background-color: #fff;
+    border-radius: 2px;
+    box-shadow: 0 0 5px rgba(255,255,255,0.5);
+}
+
+.knob .glow {
+    position: absolute;
+    top: -5px; left: -5px; right: -5px; bottom: -5px;
+    border-radius: 50%;
+    box-shadow: 0 0 15px var(--hk-blue-glow);
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.master-knob .knob .pointer {
+    background-color: var(--hk-blue);
+    box-shadow: 0 0 8px var(--hk-blue);
+}
+
+.knob-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    font-weight: bold;
+}
+
+.knob-val {
+    background: #000;
+    color: var(--hk-blue);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    border: 1px solid #333;
+}
+
+.fx-section {
+    background-color: rgba(0,0,0,0.5);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #333;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background-color: var(--bg-panel);
+    padding: 2.5rem;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
+
+.close-btn {
+    position: absolute;
+    top: 1rem; right: 1.5rem;
+    font-size: 2rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #fff;
+}
+
+.modal-content h2 {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.modal-content p {
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.input-group input {
+    padding: 0.8rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-dark);
+    color: white;
+    font-size: 1rem;
+}
+
+.input-group input:focus {
+    border-color: var(--hk-blue);
+    outline: none;
+}
+
+.help-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.help-text a {
+    color: var(--hk-blue);
+    text-decoration: none;
+}
+
+.help-text a:hover {
+    text-decoration: underline;
+}
+
+.primary-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: var(--hk-blue);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.primary-btn:hover {
+    background-color: #fff;
+    box-shadow: 0 0 15px var(--hk-blue-glow);
+}
+
+.success-msg {
+    color: var(--success);
+    margin-top: 1rem;
+    text-align: center;
+    font-weight: bold;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .knobs-container {
+        justify-content: center;
+    }
+    .divider {
+        display: none;
+    }
+}
+
+/* --- Mediathek & Speichern Styling --- */
+.action-bar {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.save-btn {
+    background-color: var(--hk-blue-dim);
+    color: var(--hk-blue);
+    border: 1px solid var(--hk-blue);
+    padding: 0.8rem 2rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    box-shadow: 0 0 10px var(--hk-blue-dim);
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 1px;
+}
+
+.save-btn:hover:not(:disabled) {
+    background-color: var(--hk-blue);
+    color: #000;
+    box-shadow: 0 0 15px var(--hk-blue-glow);
+}
+
+.save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.save-btn.saved {
+    background-color: var(--success);
+    color: #000;
+    border-color: var(--success);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+/* Library Section */
+.library-section {
+    margin-top: 4rem;
+    border-top: 2px solid var(--border-color);
+    padding-top: 3rem;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.library-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+}
+
+.library-header h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 1.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+.library-header h2 i {
+    color: var(--hk-blue);
+    text-shadow: 0 0 8px var(--hk-blue-glow);
+}
+
+.library-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.library-controls label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: bold;
+}
+
+.sort-select {
+    background-color: var(--bg-panel);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: 'Roboto', sans-serif;
+}
+
+.sort-select:focus {
+    border-color: var(--hk-blue);
+    box-shadow: 0 0 8px var(--hk-blue-dim);
+}
+
+/* Preset Cards Grid */
+.presets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1.5rem;
+}
+
+.preset-card {
+    background-color: var(--bg-panel);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.preset-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--hk-blue);
+    box-shadow: 0 10px 20px rgba(0, 210, 255, 0.15);
+}
+
+.preset-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+}
+
+.preset-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.25rem;
+    color: #fff;
+    font-weight: bold;
+    word-break: break-word;
+}
+
+.preset-genre {
+    background-color: var(--hk-blue-dim);
+    color: var(--hk-blue);
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 210, 255, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.preset-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+}
+
+.preset-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    padding-bottom: 0.3rem;
+}
+
+.preset-detail-row .lbl {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.preset-detail-row .val {
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.preset-channel-tag {
+    font-size: 0.75rem;
+    font-weight: bold;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    border: 1px solid currentColor;
+    letter-spacing: 0.5px;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.preset-channel-tag.clean { color: #00d2ff; }
+.preset-channel-tag.crunch { color: #ff9f00; }
+.preset-channel-tag.lead { color: #ff3b30; }
+.preset-channel-tag.ultra { color: #af52de; }
+
+.preset-actions {
+    display: flex;
+    gap: 0.8rem;
+    margin-top: auto;
+}
+
+.preset-btn {
+    flex: 1;
+    padding: 0.7rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.btn-load {
+    background-color: var(--hk-blue);
+    color: #000;
+}
+
+.btn-load:hover {
+    background-color: #fff;
+    box-shadow: 0 0 12px var(--hk-blue-glow);
+}
+
+.btn-delete {
+    background-color: transparent;
+    color: var(--error);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete:hover {
+    background-color: var(--error);
+    color: #fff;
+    border-color: var(--error);
+}
+
+.empty-library {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-muted);
+    background-color: rgba(255,255,255,0.01);
+    border-radius: 12px;
+    border: 1px dashed var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.empty-library i {
+    font-size: 2.5rem;
+    color: rgba(255,255,255,0.1);
+}
+
+.empty-library p {
+    font-size: 1.1rem;
+}
+</style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-guitar"></i>
+            <h1>Tone Finder</h1>
+            <span class="badge">Black Spirit Edition</span>
+        </div>
+        <button id="settings-btn" class="icon-btn" title="API Einstellungen"><i class="fa-solid fa-gear"></i></button>
+    </header>
+
+    <main>
+        <section class="search-section">
+            <h2>Finde den Signature Sound</h2>
+            <div class="search-box">
+                <input type="text" id="artist-input" placeholder="Künstler eingeben (z.B. John Mayer, Slash)..." autocomplete="off">
+                <button id="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            <p id="loading-msg" class="hidden"><i class="fa-solid fa-circle-notch fa-spin"></i> KI analysiert den Sound...</p>
+            <p id="error-msg" class="hidden error-msg"></p>
+        </section>
+
+        <section id="results-section" class="hidden">
+            <div class="cards-container">
+                
+                <!-- Guitar Info Card -->
+                <div class="card guitar-card">
+                    <h3><i class="fa-solid fa-music"></i> Instrument & Pickups</h3>
+                    <div class="info-row">
+                        <span class="label">Gitarrentyp:</span>
+                        <span id="res-guitar" class="value">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Pickup Position:</span>
+                        <span id="res-pickup" class="value">-</span>
+                    </div>
+                </div>
+
+                <!-- Playstyle Card -->
+                <div class="card playstyle-card">
+                    <h3><i class="fa-solid fa-bolt"></i> Spielstil & Skalen</h3>
+                    <div class="info-row">
+                        <span class="label">Solo Skalen:</span>
+                        <span id="res-scales" class="value">-</span>
+                    </div>
+                    <div class="info-row tips-row">
+                        <span class="label">Tipps:</span>
+                        <p id="res-tips" class="value text-block">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amp Dashboard Card -->
+            <div class="amp-dashboard">
+                <div class="amp-header">
+                    <h2>Black Spirit 200 Settings</h2>
+                    <div class="channel-display">
+                        CH: <span id="res-channel">CLEAN</span>
+                    </div>
+                </div>
+                
+                <div class="knobs-container">
+                    <div class="knob-group">
+                        <div class="knob" id="knob-gain">
+                            <div class="pointer"></div>
+                            <div class="glow"></div>
+                        </div>
+                        <span class="knob-label">Gain</span>
+                        <span class="knob-val" id="val-gain">0</span>
+                    </div>
+                    <div class="knob-group">
+                        <div class="knob" id="knob-bass">
+                            <div class="pointer"></div>
+                            <div class="glow"></div>
+                        </div>
+                        <span class="knob-label">Bass</span>
+                        <span class="knob-val" id="val-bass">0</span>
+                    </div>
+                    <div class="knob-group">
+                        <div class="knob" id="knob-mid">
+                            <div class="pointer"></div>
+                            <div class="glow"></div>
+                        </div>
+                        <span class="knob-label">Mid</span>
+                        <span class="knob-val" id="val-mid">0</span>
+                    </div>
+                    <div class="knob-group">
+                        <div class="knob" id="knob-treble">
+                            <div class="pointer"></div>
+                            <div class="glow"></div>
+                        </div>
+                        <span class="knob-label">Treble</span>
+                        <span class="knob-val" id="val-treble">0</span>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="knob-group master-knob">
+                        <div class="knob" id="knob-resonance">
+                            <div class="pointer"></div>
+                            <div class="glow"></div>
+                        </div>
+                        <span class="knob-label">Resonance</span>
+                        <span class="knob-val" id="val-resonance">0</span>
+                    </div>
+                    <div class="knob-group master-knob">
+                        <div class="knob" id="knob-presence">
+                            <div class="pointer"></div>
+                            <div class="glow"></div>
+                        </div>
+                        <span class="knob-label">Presence</span>
+                        <span class="knob-val" id="val-presence">0</span>
+                    </div>
+                    <div class="knob-group master-knob">
+                        <div class="knob" id="knob-sagging">
+                            <div class="pointer"></div>
+                            <div class="glow"></div>
+                        </div>
+                        <span class="knob-label">Sagging</span>
+                        <span class="knob-val" id="val-sagging">0</span>
+                    </div>
+                </div>
+
+                <div class="fx-section">
+                    <span class="label">Effekte:</span>
+                    <span id="res-fx" class="value">-</span>
+                </div>
+            </div>
+
+            <!-- Action Bar zum Speichern -->
+            <div class="action-bar">
+                <button id="save-tone-btn" class="save-btn"><i class="fa-solid fa-bookmark"></i> Sound speichern</button>
+            </div>
+        </section>
+
+        <!-- Mediathek / Offline-Datenbank -->
+        <section class="library-section" id="library-section">
+            <div class="library-header">
+                <h2><i class="fa-solid fa-database"></i> Gespeicherte Sounds</h2>
+                <div class="library-controls">
+                    <label for="sort-select">Sortieren nach:</label>
+                    <select id="sort-select" class="sort-select">
+                        <option value="date">Datum (Neueste zuerst)</option>
+                        <option value="name">Künstler</option>
+                        <option value="genre">Musikrichtung</option>
+                        <option value="guitar">Gitarrentyp</option>
+                    </select>
+                </div>
+            </div>
+            <div class="presets-grid" id="presets-grid">
+                <!-- Wird dynamisch durch JS befüllt -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" id="close-settings">&times;</span>
+            <h2><i class="fa-solid fa-key"></i> API Einstellungen</h2>
+            <p>Um die KI für die Soundsuche zu nutzen, benötigst du einen kostenlosen Google Gemini API Key.</p>
+            <div class="input-group">
+                <label for="api-key">Gemini API Key</label>
+                <input type="password" id="api-key" placeholder="AIzaSy...">
+            </div>
+            <p class="help-text">Den Key erhältst du kostenlos im <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a>. Der Key wird nur lokal in deinem Browser gespeichert.</p>
+            <button id="save-key-btn" class="primary-btn">Speichern</button>
+            <p id="save-msg" class="success-msg hidden">Gespeichert!</p>
+        </div>
+    </div>
+
+    <script>
+const DOM = {
+    settingsBtn: document.getElementById('settings-btn'),
+    settingsModal: document.getElementById('settings-modal'),
+    closeSettings: document.getElementById('close-settings'),
+    apiKeyInput: document.getElementById('api-key'),
+    saveKeyBtn: document.getElementById('save-key-btn'),
+    saveMsg: document.getElementById('save-msg'),
+    
+    artistInput: document.getElementById('artist-input'),
+    searchBtn: document.getElementById('search-btn'),
+    loadingMsg: document.getElementById('loading-msg'),
+    errorMsg: document.getElementById('error-msg'),
+    resultsSection: document.getElementById('results-section'),
+    
+    resGuitar: document.getElementById('res-guitar'),
+    resPickup: document.getElementById('res-pickup'),
+    resScales: document.getElementById('res-scales'),
+    resTips: document.getElementById('res-tips'),
+    resChannel: document.getElementById('res-channel'),
+    resFx: document.getElementById('res-fx'),
+    
+    saveToneBtn: document.getElementById('save-tone-btn'),
+    presetsGrid: document.getElementById('presets-grid'),
+    sortSelect: document.getElementById('sort-select'),
+    
+    knobs: {
+        gain: document.getElementById('knob-gain'),
+        bass: document.getElementById('knob-bass'),
+        mid: document.getElementById('knob-mid'),
+        treble: document.getElementById('knob-treble'),
+        resonance: document.getElementById('knob-resonance'),
+        presence: document.getElementById('knob-presence'),
+        sagging: document.getElementById('knob-sagging')
+    },
+    vals: {
+        gain: document.getElementById('val-gain'),
+        bass: document.getElementById('val-bass'),
+        mid: document.getElementById('val-mid'),
+        treble: document.getElementById('val-treble'),
+        resonance: document.getElementById('val-resonance'),
+        presence: document.getElementById('val-presence'),
+        sagging: document.getElementById('val-sagging')
+    }
+};
+
+// State
+let currentToneData = null;
+let currentArtistName = '';
+let presets = [];
+
+// Initialize
+let apiKey = localStorage.getItem('gemini_api_key') || '';
+DOM.apiKeyInput.value = apiKey;
+loadPresets();
+renderPresets();
+
+// Event Listeners
+DOM.settingsBtn.addEventListener('click', () => DOM.settingsModal.classList.remove('hidden'));
+DOM.closeSettings.addEventListener('click', () => DOM.settingsModal.classList.add('hidden'));
+DOM.saveKeyBtn.addEventListener('click', () => {
+    apiKey = DOM.apiKeyInput.value.trim();
+    localStorage.setItem('gemini_api_key', apiKey);
+    DOM.saveMsg.classList.remove('hidden');
+    setTimeout(() => {
+        DOM.saveMsg.classList.add('hidden');
+        DOM.settingsModal.classList.add('hidden');
+    }, 1500);
+});
+
+DOM.searchBtn.addEventListener('click', performSearch);
+DOM.artistInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') performSearch();
+});
+
+DOM.saveToneBtn.addEventListener('click', savePreset);
+DOM.sortSelect.addEventListener('change', renderPresets);
+
+async function performSearch() {
+    const artist = DOM.artistInput.value.trim();
+    if (!artist) return;
+    
+    if (!apiKey) {
+        showError("Bitte hinterlege zuerst deinen Gemini API Key in den Einstellungen (Zahnrad-Icon).");
+        DOM.settingsModal.classList.remove('hidden');
+        return;
+    }
+
+    currentArtistName = artist;
+    
+    // UI Reset
+    DOM.resultsSection.classList.add('hidden');
+    DOM.errorMsg.classList.add('hidden');
+    DOM.loadingMsg.classList.remove('hidden');
+    
+    DOM.saveToneBtn.disabled = true;
+    DOM.saveToneBtn.classList.remove('saved');
+    DOM.saveToneBtn.innerHTML = '<i class="fa-solid fa-bookmark"></i> Sound speichern';
+
+    try {
+        const toneData = await fetchToneData(artist);
+        currentToneData = toneData;
+        updateUI(toneData);
+        DOM.loadingMsg.classList.add('hidden');
+        DOM.resultsSection.classList.remove('hidden');
+        DOM.saveToneBtn.disabled = false;
+        
+        // If this artist is already saved, show saved state
+        const index = presets.findIndex(p => p.artist.toLowerCase() === artist.toLowerCase());
+        if (index > -1) {
+            DOM.saveToneBtn.classList.add('saved');
+            DOM.saveToneBtn.innerHTML = '<i class="fa-solid fa-check"></i> Sound aktualisieren / gespeichert';
+        }
+    } catch (error) {
+        console.error("API Error:", error);
+        DOM.loadingMsg.classList.add('hidden');
+        showError("Fehler bei der Generierung: " + error.message);
+    }
+}
+
+function showError(msg) {
+    DOM.errorMsg.textContent = msg;
+    DOM.errorMsg.classList.remove('hidden');
+    DOM.saveToneBtn.disabled = true;
+}
+
+async function fetchToneData(artist) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    
+    const systemInstruction = `Du bist ein professioneller Gitarrentechniker. Der User gibt dir einen Künstler.
+Du gibst ihm exakte Tone-Einstellungen zurück. 
+Gehe spezifisch auf den Hughes & Kettner Black Spirit 200 Verstärker ein.
+Erzeuge eine valide JSON-Antwort, die exakt diesem Schema folgt:
+{
+  "guitarType": "String",
+  "pickupPosition": "String",
+  "genre": "String (z.B. Blues, Hard Rock, Metal, Jazz, Alternative)",
+  "channel": "CLEAN, CRUNCH, LEAD, oder ULTRA",
+  "gain": Number (0-10),
+  "bass": Number (0-10),
+  "mid": Number (0-10),
+  "treble": Number (0-10),
+  "resonance": Number (0-10),
+  "presence": Number (0-10),
+  "sagging": Number (0-10),
+  "effects": "String (kurz)",
+  "soloScales": "String (kurz)",
+  "tips": "String (1-2 Sätze)"
+}`;
+
+    const prompt = `Künstler: ${artist}`;
+
+    const requestBody = {
+        contents: [{
+            role: "user",
+            parts: [{ text: prompt }]
+        }],
+        systemInstruction: {
+            role: "system",
+            parts: [{ text: systemInstruction }]
+        },
+        generationConfig: {
+            temperature: 0.2,
+            responseMimeType: "application/json"
+        }
+    };
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Unbekannter API Fehler");
+    }
+
+    const data = await response.json();
+    const rawText = data.candidates[0].content.parts[0].text;
+    return JSON.parse(rawText);
+}
+
+function updateUI(data) {
+    DOM.resGuitar.textContent = data.guitarType || "Standard Stratocaster";
+    DOM.resPickup.textContent = data.pickupPosition || "Neck";
+    DOM.resScales.textContent = data.soloScales || "Minor Pentatonic";
+    DOM.resTips.textContent = data.tips || "-";
+    DOM.resChannel.textContent = data.channel || "CLEAN";
+    DOM.resFx.textContent = data.effects || "Keine";
+
+    // Set Knobs
+    setKnob('gain', data.gain || 5);
+    setKnob('bass', data.bass || 5);
+    setKnob('mid', data.mid || 5);
+    setKnob('treble', data.treble || 5);
+    setKnob('resonance', data.resonance || 5);
+    setKnob('presence', data.presence || 5);
+    setKnob('sagging', data.sagging || 5);
+}
+
+function setKnob(knobId, value) {
+    // Value is 0 to 10
+    // Map 0 to -135deg, 10 to +135deg
+    const numVal = parseFloat(value);
+    const degree = (numVal / 10) * 270 - 135;
+    
+    if (DOM.knobs[knobId]) {
+        DOM.knobs[knobId].style.transform = `rotate(${degree}deg)`;
+    }
+    if (DOM.vals[knobId]) {
+        DOM.vals[knobId].textContent = numVal.toFixed(1);
+    }
+}
+
+// --- Mediathek & Offline-Datenbank Funktionen ---
+
+function loadPresets() {
+    try {
+        const stored = localStorage.getItem('tone_finder_presets');
+        presets = stored ? JSON.parse(stored) : [];
+    } catch (e) {
+        console.error("Fehler beim Laden der Presets aus localStorage", e);
+        presets = [];
+    }
+}
+
+function savePreset() {
+    if (!currentToneData || !currentArtistName) return;
+    
+    const newPreset = {
+        id: 'preset_' + Date.now(),
+        artist: currentArtistName,
+        date: new Date().toISOString(),
+        ...currentToneData
+    };
+    
+    // Prüfen, ob der Künstler bereits existiert (Case-insensitive) und aktualisieren statt duplizieren
+    const index = presets.findIndex(p => p.artist.toLowerCase() === currentArtistName.toLowerCase());
+    if (index > -1) {
+        // ID beibehalten, Rest aktualisieren
+        newPreset.id = presets[index].id;
+        newPreset.date = presets[index].date; // Erstellungsdatum beibehalten
+        presets[index] = newPreset;
+    } else {
+        presets.push(newPreset);
+    }
+    
+    try {
+        localStorage.setItem('tone_finder_presets', JSON.stringify(presets));
+        
+        // Button-Feedback
+        DOM.saveToneBtn.classList.add('saved');
+        DOM.saveToneBtn.innerHTML = '<i class="fa-solid fa-check"></i> Sound gespeichert!';
+        
+        renderPresets();
+        
+        setTimeout(() => {
+            if (DOM.saveToneBtn.classList.contains('saved') && currentArtistName === newPreset.artist) {
+                DOM.saveToneBtn.innerHTML = '<i class="fa-solid fa-check"></i> Sound aktualisieren / gespeichert';
+            }
+        }, 3000);
+    } catch (e) {
+        console.error("Fehler beim Speichern in localStorage", e);
+        alert("Speichern fehlgeschlagen: Der lokale Speicher Ihres Browsers ist möglicherweise voll oder deaktiviert.");
+    }
+}
+
+function deletePreset(id) {
+    presets = presets.filter(p => p.id !== id);
+    try {
+        localStorage.setItem('tone_finder_presets', JSON.stringify(presets));
+        renderPresets();
+        
+        // Wenn das gelöschte Preset dem aktuell angezeigten entspricht, Save-Button zurücksetzen
+        if (currentToneData) {
+            const stillSaved = presets.some(p => p.artist.toLowerCase() === currentArtistName.toLowerCase());
+            if (!stillSaved) {
+                DOM.saveToneBtn.classList.remove('saved');
+                DOM.saveToneBtn.innerHTML = '<i class="fa-solid fa-bookmark"></i> Sound speichern';
+            }
+        }
+    } catch (e) {
+        console.error("Fehler beim Löschen aus localStorage", e);
+    }
+}
+
+function loadPresetIntoUI(preset) {
+    currentToneData = {
+        guitarType: preset.guitarType,
+        pickupPosition: preset.pickupPosition,
+        genre: preset.genre,
+        channel: preset.channel,
+        gain: preset.gain,
+        bass: preset.bass,
+        mid: preset.mid,
+        treble: preset.treble,
+        resonance: preset.resonance,
+        presence: preset.presence,
+        sagging: preset.sagging,
+        effects: preset.effects,
+        soloScales: preset.soloScales,
+        tips: preset.tips
+    };
+    currentArtistName = preset.artist;
+    DOM.artistInput.value = preset.artist;
+    
+    // UI aktualisieren
+    updateUI(currentToneData);
+    
+    // Bereich anzeigen
+    DOM.resultsSection.classList.remove('hidden');
+    
+    // Button auf "Gespeichert" setzen
+    DOM.saveToneBtn.disabled = false;
+    DOM.saveToneBtn.classList.add('saved');
+    DOM.saveToneBtn.innerHTML = '<i class="fa-solid fa-check"></i> Sound geladen & gespeichert';
+    
+    // Scroll zum Dashboard
+    DOM.resultsSection.scrollIntoView({ behavior: 'smooth' });
+    
+    // Benachrichtige die Suite, ChromaChord zu öffnen und Tonleitern in A anzuzeigen
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'OPEN_CHROMACHORD_SCALES', root: 'A' }, '*');
+    }
+}
+
+function renderPresets() {
+    const sortBy = DOM.sortSelect.value;
+    let sortedPresets = [...presets];
+    
+    if (sortBy === 'name') {
+        sortedPresets.sort((a, b) => a.artist.localeCompare(b.artist));
+    } else if (sortBy === 'genre') {
+        sortedPresets.sort((a, b) => (a.genre || '').localeCompare(b.genre || ''));
+    } else if (sortBy === 'guitar') {
+        sortedPresets.sort((a, b) => (a.guitarType || '').localeCompare(b.guitarType || ''));
+    } else {
+        // Standard: Nach Datum (Neueste zuerst)
+        sortedPresets.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+    
+    DOM.presetsGrid.innerHTML = '';
+    
+    if (sortedPresets.length === 0) {
+        DOM.presetsGrid.innerHTML = `
+            <div class="empty-library">
+                <i class="fa-solid fa-folder-open"></i>
+                <p>Keine gespeicherten Sounds vorhanden.</p>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Suche oben nach einem Künstler und speichere den Sound ab!</span>
+            </div>
+        `;
+        return;
+    }
+    
+    sortedPresets.forEach(preset => {
+        const card = document.createElement('div');
+        card.className = 'preset-card';
+        
+        const chClass = (preset.channel || 'clean').toLowerCase();
+        
+        card.innerHTML = `
+            <div>
+                <div class="preset-card-header">
+                    <span class="preset-title">${escapeHTML(preset.artist)}</span>
+                    <span class="preset-genre">${escapeHTML(preset.genre || 'Sonstiges')}</span>
+                </div>
+                <div class="preset-details">
+                    <div class="preset-detail-row">
+                        <span class="lbl">Gitarre:</span>
+                        <span class="val">${escapeHTML(preset.guitarType)}</span>
+                    </div>
+                    <div class="preset-detail-row">
+                        <span class="lbl">Kanal:</span>
+                        <span class="preset-channel-tag ${chClass}">${escapeHTML(preset.channel)}</span>
+                    </div>
+                    <div class="preset-detail-row">
+                        <span class="lbl">Gain:</span>
+                        <span class="val">${preset.gain.toFixed(1)}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="preset-actions">
+                <button class="preset-btn btn-load"><i class="fa-solid fa-play"></i> Laden</button>
+                <button class="preset-btn btn-delete"><i class="fa-solid fa-trash"></i> Löschen</button>
+            </div>
+        `;
+        
+        // Event-Listeners für Buttons
+        card.querySelector('.btn-load').addEventListener('click', () => loadPresetIntoUI(preset));
+        card.querySelector('.btn-delete').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm(`Sound für "${preset.artist}" wirklich löschen?`)) {
+                deletePreset(preset.id);
+            }
+        });
+        
+        DOM.presetsGrid.appendChild(card);
+    });
+}
+
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+    );
+}
+
+</script>
+</body>
+</html>

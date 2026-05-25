@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChromaChord | Harmonische Analyse & Progressionen</title>
+    <meta name="description" content="Analysiere deine Akkordfolgen, entdecke passende Skalen und tauche in die emotionale Stimmung deiner Musik ein.">
+    <!-- Google Fonts: Outfit für modernes, cleanes Aussehen -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Remix Icons für minimalistische Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ChromaChord">
+    <link rel="apple-touch-icon" href="icon-512.png">
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="glow glow-1"></div>
+        <div class="glow glow-2"></div>
+        <div class="glow glow-3"></div>
+    </div>
+
+    <div class="app-container">
+        <!-- Sidebar / History -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="ri-history-line"></i> Verlauf</h2>
+                <button id="close-sidebar-btn" class="icon-btn" aria-label="Verlauf schließen">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <ul id="history-list" class="history-list">
+                <!-- History items will be injected here -->
+            </ul>
+
+            <div class="sidebar-footer">
+                <h3><i class="ri-cloud-line"></i> Cloud & Backup</h3>
+                <div class="cloud-actions">
+                    <button id="export-db-btn" class="secondary-btn small-btn" title="Als Datei speichern">
+                        <i class="ri-download-2-line"></i> Export
+                    </button>
+                    <button id="import-db-btn" class="secondary-btn small-btn" title="Datei laden">
+                        <i class="ri-upload-2-line"></i> Import
+                    </button>
+                    <input type="file" id="import-file-input" class="hidden" accept=".json">
+                </div>
+                <p class="cloud-hint">Tipp: Speichere den Export direkt in deinem <strong>iCloud Drive</strong>.</p>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <div class="logo">
+                    <i class="ri-music-2-fill"></i>
+                    <span>ChromaChord</span>
+                </div>
+                <div class="header-actions">
+                    <button id="mobile-link-btn" class="secondary-btn" aria-label="Am Handy öffnen">
+                        <i class="ri-phone-line"></i> Handy
+                    </button>
+                    <button id="toggle-sidebar-btn" class="secondary-btn" aria-label="Verlauf öffnen">
+                        <i class="ri-bookmark-3-line"></i> Gespeichert
+                    </button>
+                </div>
+            </header>
+
+            <section class="hero">
+                <h1>Analysiere deine <span>Akkordfolgen</span></h1>
+                <p>Gib deine Progression ein und entdecke harmonische Zusammenhänge, Skalen und Stimmungen.</p>
+                
+                <div class="input-container">
+                    <div class="input-wrapper">
+                        <i class="ri-keyboard-line input-icon"></i>
+                        <input type="text" id="chord-input" placeholder="Z. B. C - G - Am - F" autocomplete="off" spellcheck="false">
+                        <button id="clear-input-btn" class="icon-btn hidden" aria-label="Eingabe löschen">
+                            <i class="ri-close-circle-fill"></i>
+                        </button>
+                    </div>
+                    <button id="mic-btn" class="secondary-btn tooltip" style="padding: 0 1.2rem;" aria-label="Live Erkennung" data-tooltip="Live Mikrofon-Erkennung">
+                        <i class="ri-mic-line" style="font-size: 1.2rem;"></i>
+                    </button>
+                    <button id="analyze-btn" class="primary-btn">
+                        <span>Analysieren</span>
+                        <i class="ri-arrow-right-line"></i>
+                    </button>
+                    <button id="main-play-btn" class="secondary-btn tooltip" style="padding: 0 1.2rem;" aria-label="Wiedergabe" data-tooltip="Progression abspielen">
+                        <i class="ri-play-fill" style="font-size: 1.2rem;"></i>
+                    </button>
+                    <button id="main-stop-btn" class="secondary-btn tooltip hidden" style="padding: 0 1.2rem; border-color: var(--accent);" aria-label="Stopp" data-tooltip="Stopp">
+                        <i class="ri-stop-fill" style="font-size: 1.2rem; color: var(--accent);"></i>
+                    </button>
+                </div>
+                
+                <!-- Chord Picker (Schnellauswahl) -->
+                <div class="chord-picker glass" style="margin-top: 1rem; padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; border-radius: var(--radius-pill);">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;"><i class="ri-add-circle-line"></i> Akkord hinzufügen:</span>
+                    
+                    <div class="select-wrapper" style="position: relative;">
+                        <select id="picker-root" class="styled-select" style="padding-top: 0.5rem; padding-bottom: 0.5rem; font-size: 0.9rem;">
+                            <option value="C">C</option>
+                            <option value="C#">C#</option>
+                            <option value="D">D</option>
+                            <option value="D#">D#</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                            <option value="F#">F#</option>
+                            <option value="G">G</option>
+                            <option value="G#">G#</option>
+                            <option value="A" selected>A</option>
+                            <option value="A#">A#</option>
+                            <option value="B">B</option>
+                        </select>
+                    </div>
+
+                    <div class="select-wrapper" style="position: relative;">
+                        <select id="picker-type" class="styled-select" style="padding-top: 0.5rem; padding-bottom: 0.5rem; font-size: 0.9rem;">
+                            <option value="">Dur</option>
+                            <option value="m">Moll</option>
+                            <option value="7">7</option>
+                            <option value="maj7">maj7</option>
+                            <option value="m7">m7</option>
+                            <option value="sus2">sus2</option>
+                            <option value="sus4">sus4</option>
+                            <option value="dim">dim</option>
+                            <option value="aug">aug</option>
+                        </select>
+                    </div>
+
+                    <button id="add-chord-btn" class="secondary-btn small-btn" style="padding: 0.5rem 1rem; border-radius: var(--radius-pill); background: var(--primary-glow);">
+                        <i class="ri-add-line"></i> Hinzufügen
+                    </button>
+                </div>
+
+                <div class="input-hint" style="margin-top: 0.8rem;">Tipp: Nutze die Dropdowns für eine schnelle Auswahl oder tippe direkt ins Feld.</div>
+                
+                <!-- Live Mic Status -->
+                <div id="mic-status" class="glass hidden" style="margin-top: 1rem; padding: 0.5rem 1.5rem; border-radius: var(--radius-pill); display: flex; align-items: center; justify-content: center; gap: 1rem;">
+                    <div class="recording-dot"></div>
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Hört zu...</span>
+                    <strong id="mic-detected-chord" style="font-size: 1.4rem; color: var(--accent); min-width: 80px;">-</strong>
+                    <button id="use-mic-chord-btn" class="secondary-btn small-btn hidden" style="padding: 0.3rem 0.8rem;">
+                        <i class="ri-add-line"></i> Einfügen
+                    </button>
+                </div>
+                
+                <div class="mood-selector" style="margin-top: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 1.2rem; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 0.8rem;">
+                        <label for="target-mood" style="color: var(--text-muted); font-size: 1rem;">
+                            <i class="ri-equalizer-line"></i> Stimmung:
+                        </label>
+                        <div class="select-wrapper" style="position: relative;">
+                            <select id="target-mood" class="styled-select">
+                                <option value="auto">Auto</option>
+                                <option value="happy">Heller</option>
+                                <option value="sad">Dunkler</option>
+                                <option value="tense">Spannend</option>
+                                <option value="floating">Schwebend</option>
+                            </select>
+                            <i class="ri-arrow-down-s-line select-icon" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted);"></i>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 0.8rem;">
+                        <label for="octave-shift" style="color: var(--text-muted); font-size: 1rem;">
+                            <i class="ri-sort-asc"></i> Oktav:
+                        </label>
+                        <div class="select-wrapper" style="position: relative;">
+                            <select id="octave-shift" class="styled-select">
+                                <option value="-1">-1</option>
+                                <option value="0" selected>Standard</option>
+                                <option value="1">+1</option>
+                                <option value="2">+2</option>
+                            </select>
+                            <i class="ri-arrow-down-s-line select-icon" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted);"></i>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Fretboard Explorer -->
+            <section id="fretboard-explorer" class="dashboard" style="margin-top: 2rem;">
+                <div class="dashboard-header" style="border-bottom: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem; padding-bottom: 0.5rem;">
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <h2><i class="ri-music-fill"></i> Griffbrett</h2>
+                        <div class="fretboard-tabs">
+                            <button class="fret-tab active" data-tab="explore">Erkunden</button>
+                            <button class="fret-tab" data-tab="library">Bibliothek & Skalen</button>
+                        </div>
+                    </div>
+                    <div class="dashboard-actions">
+                        <button id="clear-fretboard-btn" class="secondary-btn small-btn">
+                            <i class="ri-refresh-line"></i> Zurücksetzen
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Explore View (Interactive Recognition) -->
+                <div id="fret-view-explore" class="fret-view active">
+                    <p class="result-desc" style="text-align: center; margin-bottom: 1.5rem;">Klicke auf die Saiten, um Töne zu markieren. Die App erkennt den Akkord.</p>
+                    
+                    <div class="fretboard-result" style="display: flex; justify-content: space-between; align-items: center; padding: 0 1rem 1rem; color: var(--text-muted);">
+                        <span>Erkannter Akkord:</span>
+                        <strong id="fretboard-chord-name" style="font-size: 1.2rem; color: var(--accent);">-</strong>
+                        <button id="use-fretboard-chord-btn" class="secondary-btn small-btn" style="display: none;">
+                            <i class="ri-add-line"></i> Zur Progression hinzufügen
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Library View (Chord & Scale Selector) -->
+                <div id="fret-view-library" class="fret-view hidden" style="padding: 0 1rem 1rem;">
+                    <div class="library-controls" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                        <div class="input-group" style="flex: 1; min-width: 120px;">
+                            <label for="lib-root">Grundton</label>
+                            <select id="lib-root" class="styled-select" style="width: 100%;">
+                                <option value="C">C</option>
+                                <option value="C#">C# / Db</option>
+                                <option value="D">D</option>
+                                <option value="D#">D# / Eb</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="F#">F# / Gb</option>
+                                <option value="G">G</option>
+                                <option value="G#">G# / Ab</option>
+                                <option value="A" selected>A</option>
+                                <option value="A#">A# / Bb</option>
+                                <option value="B">B</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group" style="flex: 1; min-width: 120px;">
+                            <label for="lib-chord-type">Akkordtyp</label>
+                            <select id="lib-chord-type" class="styled-select" style="width: 100%;">
+                                <option value="">Dur</option>
+                                <option value="m">Moll</option>
+                                <option value="7">Dominant 7</option>
+                                <option value="maj7">Major 7</option>
+                                <option value="m7">Minor 7</option>
+                                <option value="6">Dur 6</option>
+                                <option value="m6">Moll 6</option>
+                                <option value="sus2">Sus 2</option>
+                                <option value="sus4">Sus 4</option>
+                                <option value="dim">Vermindert (dim)</option>
+                                <option value="aug">Übermäßig (aug)</option>
+                                <option value="m7b5">Halbvermindert</option>
+                            </select>
+                        </div>
+                        
+                        <div class="input-group" style="flex: 1; min-width: 180px;">
+                            <label for="lib-scale">Skala anzeigen</label>
+                            <select id="lib-scale" class="styled-select" style="width: 100%;">
+                                <option value="none">-- Keine Skala --</option>
+                                <!-- JS wird hier weitere Optionen einfügen -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">Akkorde zum Grundton</h3>
+                    <div class="chord-library-grid" id="chord-library-grid" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+                        <!-- JS generiert hier Buttons für gängige Akkorde basierend auf dem Grundton -->
+                    </div>
+                </div>
+
+                <!-- The shared Fretboard instance -->
+                <div class="fretboard-scroll-wrapper glass" style="padding: 1rem; border-radius: var(--radius-md);">
+                    <div id="interactive-fretboard" class="fretboard">
+                        <!-- JS will inject the interactive fretboard here -->
+                    </div>
+                </div>
+            </section>
+            <!-- Results Dashboard -->
+            <section id="results-dashboard" class="dashboard hidden">
+                <div class="dashboard-header">
+                    <h2>Analyseergebnisse</h2>
+                    <div class="dashboard-actions">
+                        <button id="play-btn" class="icon-btn tooltip" aria-label="Wiedergabe starten" data-tooltip="Loop abspielen">
+                            <i class="ri-play-fill"></i>
+                        </button>
+                        <button id="stop-btn" class="icon-btn tooltip hidden" aria-label="Wiedergabe stoppen" data-tooltip="Stopp">
+                            <i class="ri-stop-fill" style="color: var(--accent);"></i>
+                        </button>
+                        <button id="save-btn" class="icon-btn tooltip" aria-label="Speichern" data-tooltip="In Verlauf speichern">
+                            <i class="ri-bookmark-line"></i>
+                        </button>
+                        <button id="copy-btn" class="icon-btn tooltip" aria-label="Kopieren" data-tooltip="Ergebnisse kopieren">
+                            <i class="ri-file-copy-line"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="results-grid">
+                    <!-- Key & Tone -->
+                    <div class="result-card glass">
+                        <div class="card-icon"><i class="ri-key-2-line"></i></div>
+                        <h3>Tonart</h3>
+                        <div id="result-key" class="result-value">-</div>
+                        <p id="result-key-desc" class="result-desc">Die vermutete Basis der Progression.</p>
+                    </div>
+
+                    <!-- Mood -->
+                    <div class="result-card glass">
+                        <div class="card-icon"><i class="ri-emotion-line"></i></div>
+                        <h3>Stimmung</h3>
+                        <div id="result-mood" class="result-value">-</div>
+                        <p id="result-mood-desc" class="result-desc">Emotionale Wirkung.</p>
+                    </div>
+
+                    <!-- Alternative Chords -->
+                    <div class="result-card glass width-auto">
+                        <div class="card-icon"><i class="ri-stack-line"></i></div>
+                        <h3>Alternative Akkorde</h3>
+                        <div id="result-alt-chords" class="tags-container">
+                            <!-- Tags will be injected here -->
+                        </div>
+                        <p class="result-desc">Substitutionen & Superimpositions zum Überlagern.</p>
+                    </div>
+
+                    <!-- Solo Scales -->
+                    <div class="result-card glass width-auto span-2">
+                        <div class="card-icon"><i class="ri-mic-line"></i></div>
+                        <h3>Solo-Skalen</h3>
+                        <div id="result-scales" class="tags-container">
+                            <!-- Tags will be injected here -->
+                        </div>
+                        <p class="result-desc">Skalen für Improvisation und Melodie.</p>
+                    </div>
+                </div>
+                
+                <div class="explanation-panel glass">
+                    <div class="explanation-header">
+                        <i class="ri-lightbulb-flash-line"></i> 
+                        <h3>Warum diese Ergebnisse?</h3>
+                    </div>
+                    <p id="result-explanation">Gib eine Akkordfolge ein, um tiefergehende theologische Erklärungen zu erhalten.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Mobile Access Modal -->
+    <div id="mobile-modal" class="modal-overlay hidden">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3><i class="ri-phone-line"></i> Handy-Verbindung</h3>
+                <button id="close-modal-btn" class="icon-btn"><i class="ri-close-line"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Scanne den QR-Code, um die App auf deinem Handy zu öffnen. Deine Geräte müssen im gleichen WLAN sein.</p>
+                <div class="qr-container">
+                    <img id="qr-code-img" src="" alt="QR Code" class="hidden">
+                    <div id="qr-placeholder" class="qr-placeholder">
+                        <i class="ri-qr-code-line"></i>
+                    </div>
+                </div>
+                <div class="url-info">
+                    <div class="url-display">
+                        <code id="local-url-display">http://192.168.178.99:8000</code>
+                        <button id="copy-url-btn" class="icon-btn" title="URL kopieren">
+                            <i class="ri-file-copy-line"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="server-instructions">
+                    <h4><i class="ri-terminal-box-line"></i> Server am Mac starten:</h4>
+                    <div class="code-block">
+                        <code>python3 -m http.server 8000</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="utils/audioAnalyzer.js"></script>
+    <script src="utils/Tone.js"></script>
+    <script src="utils/guitarTab.js"></script>
+    <script src="utils/musicTheory.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

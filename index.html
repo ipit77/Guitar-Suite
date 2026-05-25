@@ -2,9 +2,333 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Mein GitHub Server</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Guitar & Tone Suite</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PWA & Mobile Optimization -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Guitar Suite">
+    <meta name="theme-color" content="#0a0a0f">
+
+    <style>
+        :root {
+            --bg-dark: #07070a;
+            --bg-nav: rgba(13, 13, 20, 0.85);
+            --hk-blue: #00d2ff;
+            --hk-blue-glow: rgba(0, 210, 255, 0.4);
+            --chroma-purple: #8a2be2;
+            --chroma-purple-glow: rgba(138, 43, 226, 0.4);
+            --text-main: #ffffff;
+            --text-muted: #8e8e9f;
+            --border-glass: rgba(255, 255, 255, 0.05);
+            --nav-height: 65px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ambient background glow effects */
+        .bg-glow {
+            position: absolute;
+            width: 50vw;
+            height: 50vw;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.15;
+            z-index: -1;
+            pointer-events: none;
+            animation: floatGlow 25s infinite alternate ease-in-out;
+        }
+        
+        .glow-left {
+            top: -15%;
+            left: -15%;
+            background: radial-gradient(circle, var(--hk-blue) 0%, transparent 70%);
+        }
+        
+        .glow-right {
+            bottom: -15%;
+            right: -15%;
+            background: radial-gradient(circle, var(--chroma-purple) 0%, transparent 70%);
+            animation-delay: -7s;
+        }
+
+        @keyframes floatGlow {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(5%, 5%) scale(1.1); }
+            100% { transform: translate(-3%, -2%) scale(0.95); }
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-nav);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 0 2rem;
+            height: var(--nav-height);
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, var(--hk-blue), #ffffff, var(--chroma-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-transform: uppercase;
+        }
+
+        .title i {
+            font-size: 1.3rem;
+            -webkit-text-fill-color: initial;
+            color: var(--hk-blue);
+            text-shadow: 0 0 10px var(--hk-blue-glow);
+        }
+
+        /* Tab Navigation */
+        .tabs {
+            display: flex;
+            height: 100%;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            padding: 0 1.5rem;
+            height: calc(var(--nav-height) - 10px);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tab-btn.active[data-tab="tone-finder"] {
+            color: var(--hk-blue);
+            background: rgba(0, 210, 255, 0.06);
+            box-shadow: inset 0 0 10px rgba(0, 210, 255, 0.05);
+            border: 1px solid rgba(0, 210, 255, 0.2);
+        }
+
+        .tab-btn.active[data-tab="chromachord"] {
+            color: #c084fc;
+            background: rgba(138, 43, 226, 0.06);
+            box-shadow: inset 0 0 10px rgba(138, 43, 226, 0.05);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+
+        .tab-btn i {
+            font-size: 1.1rem;
+            transition: transform 0.3s;
+        }
+
+        .tab-btn:hover i {
+            transform: scale(1.1);
+        }
+
+        /* App Viewports Area */
+        .app-viewports {
+            flex: 1;
+            position: relative;
+            background-color: #000;
+        }
+
+        .app-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none; /* Suspends background processing and layout issues */
+        }
+
+        .app-iframe.active {
+            display: block;
+            animation: appFadeIn 0.5s ease-out;
+        }
+
+        @keyframes appFadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Mobile Styles */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column-reverse; /* Put tabs at bottom for premium iOS app feel! */
+            }
+
+            header {
+                height: 70px;
+                padding: 0 1rem;
+                border-top: 1px solid var(--border-glass);
+                border-bottom: none;
+                flex-direction: column;
+                justify-content: center;
+                gap: 0.2rem;
+                background: rgba(10, 10, 15, 0.95);
+            }
+
+            .header-top {
+                display: none; /* Hide top title on mobile to save space */
+            }
+
+            .title {
+                display: none;
+            }
+
+            .tabs {
+                width: 100%;
+                justify-content: space-around;
+                height: 100%;
+            }
+
+            .tab-btn {
+                flex: 1;
+                justify-content: center;
+                flex-direction: column;
+                height: 55px;
+                font-size: 0.75rem;
+                gap: 0.25rem;
+                padding: 0;
+                border-radius: 6px;
+            }
+
+            .tab-btn i {
+                font-size: 1.25rem;
+            }
+            
+            .app-viewports {
+                height: calc(100vh - 70px);
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Servus! Meine Webseite läuft über GitHub Pages.</h1>
+    <div class="bg-glow glow-left"></div>
+    <div class="bg-glow glow-right"></div>
+
+    <header>
+        <div class="title">
+            <i class="fa-solid fa-guitar"></i> Guitar & Tone Suite
+        </div>
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="tone-finder">
+                <i class="fa-solid fa-sliders"></i> <span>Tone Finder</span>
+            </button>
+            <button class="tab-btn" data-tab="chromachord">
+                <i class="fa-solid fa-music"></i> <span>ChromaChord</span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="app-viewports">
+        <iframe src="tone-finder/index.html" class="app-iframe active" id="iframe-tone-finder"></iframe>
+        <iframe src="chord-analyzer/index.html" class="app-iframe" id="iframe-chromachord"></iframe>
+    </main>
+
+    <script>
+        const tabs = document.querySelectorAll('.tab-btn');
+        const iframes = document.querySelectorAll('.app-iframe');
+
+        function switchToTab(tabName) {
+            tabs.forEach(t => t.classList.remove('active'));
+            iframes.forEach(f => f.classList.remove('active'));
+
+            const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+            if (targetBtn) targetBtn.classList.add('active');
+
+            if (tabName === 'tone-finder') {
+                document.getElementById('iframe-tone-finder').classList.add('active');
+            } else if (tabName === 'chromachord') {
+                document.getElementById('iframe-chromachord').classList.add('active');
+            }
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                switchToTab(tab.getAttribute('data-tab'));
+            });
+        });
+
+        // Listen for cross-iframe messages from Tone Finder
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'OPEN_CHROMACHORD_SCALES') {
+                // 1. Switch to ChromaChord tab
+                switchToTab('chromachord');
+
+                // 2. Forward the message to the ChromaChord iframe
+                const chromaFrame = document.getElementById('iframe-chromachord');
+                if (chromaFrame && chromaFrame.contentWindow) {
+                    // Small delay to ensure iframe is visible & ready
+                    setTimeout(() => {
+                        chromaFrame.contentWindow.postMessage(event.data, '*');
+                    }, 200);
+                }
+            }
+        });
+
+        // Register Service Worker for Offline Support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registered successfully with scope: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
 </body>
 </html>
